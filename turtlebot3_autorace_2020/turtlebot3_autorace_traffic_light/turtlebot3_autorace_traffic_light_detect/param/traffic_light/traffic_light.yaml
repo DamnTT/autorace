@@ -1,0 +1,23 @@
+detect:
+  traffic_light:
+    red:
+      hue_l: 0
+      hue_h: 26
+      saturation_l: 0
+      saturation_h: 255
+      lightness_l: 66
+      lightness_h: 255
+    yellow:
+      hue_l: 179
+      hue_h: 179
+      saturation_l: 255
+      saturation_h: 255
+      lightness_l: 255
+      lightness_h: 255
+    green:
+      hue_l: 48
+      hue_h: 90
+      saturation_l: 48
+      saturation_h: 199
+      lightness_l: 88
+      lightness_h: 255
