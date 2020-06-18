@@ -31,6 +31,7 @@ from cv_bridge import CvBridge, CvBridgeError
 
 class DetectSign():
     def __init__(self):
+        #print cv2.__version__
         self.fnPreproc()
 
         self.sub_image_type = "raw" # you can choose image type "compressed", "raw"
