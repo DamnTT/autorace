@@ -1,0 +1,14 @@
+camera:
+  contrast: 70
+  sharpness: 0
+  brightness: 45
+  saturation: 35
+  ISO: 400
+  exposureCompensation: 0
+  videoStabilisation: false
+  vFlip: false
+  hFlip: false
+  shutterSpeed: 0
+  zoom: 1.0
+  exposure_mode: antishake
+  awb_mode: fluorescent
