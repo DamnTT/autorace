@@ -41,6 +41,7 @@ class CoreModeDecider():
 
         self.fnInitMode()
         self.fnInitSelf()
+        self.fnPublishMode()
 
       # Invoke if traffic light is detected
     def cbInvokedByTrafficLight(self, traffic_light_type_msg):
@@ -81,6 +82,7 @@ class CoreModeDecider():
     def fnPublishMode(self):
         decided_mode = UInt8()
         decided_mode.data = self.current_mode
+        rospy.loginfo(decided_mode.data)
         self.pub_decided_mode.publish(decided_mode)
 
     def main(self):

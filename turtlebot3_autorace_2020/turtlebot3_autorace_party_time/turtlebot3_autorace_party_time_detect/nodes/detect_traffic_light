@@ -222,7 +222,7 @@ class DetectTrafficLight():
                     self.red_count = 0
                     self.stop_count = 0
 
-        if self.green_count >= 2: #3
+        if self.green_count >= 3: #3
             msg_pub_max_vel = Float64()
             msg_pub_max_vel.data = 0.12
             self.pub_max_vel.publish(msg_pub_max_vel)
@@ -403,7 +403,7 @@ class DetectTrafficLight():
         col3 = 305
 
         low1 = 50
-        low2 = 170
+        low2 = 150
         low3 = 170
         
         # if detected more than 1 light
