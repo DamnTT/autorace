@@ -44,6 +44,10 @@ class CoreNodeController():
             'CurrentMode',
             'idle lane_following traffic_light intersection construction parking_lot level_crossing tunnel'
         )
+        self.CurrentMode_list = [
+            '', 'idle', 'lane_following', 'traffic_light', 'intersection',
+            'construction', 'parking_lot', 'level_crossing tunnel'
+        ]
         # construction
         # self.CurrentMode = Enum('CurrentMode', 'idle lane_following traffic_light parking_lot level_crossing tunnel construction')
         # intersection
@@ -177,9 +181,11 @@ class CoreNodeController():
         self.launch_control_lane_launched = False
         self.launch_control_moving_launched = False
         self.launch_control_tunnel_launched = False
+        self.launch_control_parking_launched = False
         self.launch_detect_construction_launched = False
         self.launch_detect_level_launched = False
         self.launch_detect_tunnel_launched = False
+        self.launch_detect_parking_launched = False
 
         self.current_mode = self.CurrentMode.idle.value
         self.is_triggered = False
@@ -187,14 +193,18 @@ class CoreNodeController():
         loop_rate = rospy.Rate(10)  # 10hz
         while not rospy.is_shutdown():
             if self.is_triggered == True:
+                rospy.loginfo("the current mode is %d ", self.current_mode)
+                rospy.loginfo(self.CurrentMode_list[self.current_mode])
+
                 self.fnControlNode()
 
             loop_rate.sleep()
 
     def cbReceiveMode(self, mode_msg):
         rospy.loginfo("starts the progress with %d", mode_msg.data)
-
         self.current_mode = mode_msg.data
+        rospy.loginfo("the current mode is %d ", self.current_mode)
+        rospy.loginfo(self.CurrentMode_list[self.current_mode])
         self.is_triggered = True
 
     def cbIntersectionStamped(self, intersection_msg):  # intersection
@@ -259,14 +269,15 @@ class CoreNodeController():
             rospy.loginfo("New trigger for lane_following")
             self.fnLaunch(self.Launcher.launch_camera_ex_calib.value, True)
             self.fnLaunch(self.Launcher.launch_detect_lane.value, True)
-            self.fnLaunch(self.Launcher.launch_detect_traffic_light.value,False)
+            self.fnLaunch(self.Launcher.launch_detect_traffic_light.value,
+                          False)
             self.fnLaunch(self.Launcher.launch_detect_sign.value, True)
             self.fnLaunch(self.Launcher.launch_detect_tunnel.value, False)
             self.fnLaunch(self.Launcher.launch_detect_parking.value, False)
 
             # self.fnLaunch(self.Launcher.launch_detect_construction.value, True) construction
             self.fnLaunch(self.Launcher.launch_control_lane.value, True)
-            self.fnLaunch(self.Launcher.launch_control_moving.value, False)
+            self.fnLaunch(self.Launcher.launch_control_moving.value, True)
             self.fnLaunch(self.Launcher.launch_control_parking.value, False)
             self.fnLaunch(self.Launcher.launch_control_intersection.value,
                           False)
@@ -304,9 +315,12 @@ class CoreNodeController():
                 self.fnLaunch(self.Launcher.launch_control_lane.value, False)
                 self.fnLaunch(self.Launcher.launch_control_moving.value, True)
 
+            
+                
             rospy.sleep(2)
-
             self.pub_traffic_light_order.publish(msg_pub_traffic_light_order)
+
+        
         # intersection
         elif self.current_mode == self.CurrentMode.intersection.value:
             rospy.loginfo("New trigger for intersection")
@@ -341,6 +355,9 @@ class CoreNodeController():
                 self.fnLaunch(self.Launcher.launch_control_moving.value, False)
                 self.fnLaunch(self.Launcher.launch_control_intersection.value,
                               False)
+                msg_mode_return = UInt8()
+                msg_mode_return.data = 2
+                self.pub_mode_return.publish(msg_mode_return)
             rospy.sleep(3)
             self.pub_intersection_order.publish(msg_pub_intersection_order)
         # construction
@@ -394,6 +411,9 @@ class CoreNodeController():
                               False)
                 self.fnLaunch(self.Launcher.launch_control_lane.value, True)
                 self.fnLaunch(self.Launcher.launch_control_moving.value, False)
+                msg_mode_return = UInt8()
+                msg_mode_return.data = 2
+                self.pub_mode_return.publish(msg_mode_return)
 
             rospy.sleep(2)
             self.pub_construction_order.publish(msg_pub_construction_order)
@@ -506,7 +526,8 @@ class CoreNodeController():
 
                 msg_pub_tunnel_order.data = self.StepOfTunnel.go_in_to_tunnel.value
 
-                self.fnLaunch(self.Launcher.launch_camera_ex_calib.value, False)
+                self.fnLaunch(self.Launcher.launch_camera_ex_calib.value,
+                              False)
 
                 self.fnLaunch(self.Launcher.launch_detect_lane.value, False)
                 self.fnLaunch(self.Launcher.launch_detect_tunnel.value, True)
@@ -514,14 +535,15 @@ class CoreNodeController():
 
                 self.fnLaunch(self.Launcher.launch_control_lane.value, False)
                 self.fnLaunch(self.Launcher.launch_control_tunnel.value, False)
-                                   
+
             elif self.current_step_tunnel == self.StepOfTunnel.go_in_to_tunnel.value:
                 rospy.loginfo("Current step : go_in_to_tunnel")
                 rospy.loginfo("Go to next step : navigation")
 
                 msg_pub_tunnel_order.data = self.StepOfTunnel.navigation.value
 
-                self.fnLaunch(self.Launcher.launch_camera_ex_calib.value, False)
+                self.fnLaunch(self.Launcher.launch_camera_ex_calib.value,
+                              False)
 
                 self.fnLaunch(self.Launcher.launch_detect_lane.value, False)
                 self.fnLaunch(self.Launcher.launch_detect_tunnel.value, True)
@@ -552,11 +574,11 @@ class CoreNodeController():
                 msg_pub_tunnel_order.data = self.StepOfTunnel.exit.value
 
                 self.fnLaunch(self.Launcher.launch_camera_ex_calib.value, True)
-             
+
                 self.fnLaunch(self.Launcher.launch_detect_tunnel.value, False)
                 self.fnLaunch(self.Launcher.launch_detect_lane.value, True)
                 self.fnLaunch(self.Launcher.launch_detect_sign.value, True)
-             
+
                 self.fnLaunch(self.Launcher.launch_control_lane.value, True)
                 self.fnLaunch(self.Launcher.launch_control_tunnel.value, False)
 
@@ -571,15 +593,15 @@ class CoreNodeController():
                 self.fnLaunch(self.Launcher.launch_detect_tunnel.value, False)
                 self.fnLaunch(self.Launcher.launch_detect_lane.value, True)
                 self.fnLaunch(self.Launcher.launch_detect_sign.value, True)
-                
+
                 self.fnLaunch(self.Launcher.launch_control_lane.value, True)
                 self.fnLaunch(self.Launcher.launch_control_tunnel.value, False)
-                
+
             rospy.sleep(2)
 
             self.pub_tunnel_order.publish(msg_pub_tunnel_order)
 
-        self.is_triggered = False
+        #self.is_triggered = False
 
     def fnLaunch(self, launch_num, is_start):
         if launch_num == self.Launcher.launch_camera_ex_calib.value:
@@ -803,7 +825,11 @@ class CoreNodeController():
             if is_start == True:
                 if self.launch_detect_tunnel_launched == False:
                     self.launch_detect_tunnel = roslaunch.scriptapi.ROSLaunch()
-                    self.launch_detect_tunnel = roslaunch.parent.ROSLaunchParent(self.uuid, [self.ros_package_path + "turtlebot3_autorace_party_time_detect/launch/turtlebot3_autorace_detect_tunnel.launch"])     
+                    self.launch_detect_tunnel = roslaunch.parent.ROSLaunchParent(
+                        self.uuid, [
+                            self.ros_package_path +
+                            "turtlebot3_autorace_party_time_detect/launch/turtlebot3_autorace_detect_tunnel.launch"
+                        ])
                     self.launch_detect_tunnel_launched = True
                     self.launch_detect_tunnel.start()
                 else:
@@ -813,13 +839,18 @@ class CoreNodeController():
                     self.launch_detect_tunnel_launched = False
                     self.launch_detect_tunnel.shutdown()
                 else:
-                    pass    
+                    pass
 
         elif launch_num == self.Launcher.launch_control_tunnel.value:
             if is_start == True:
                 if self.launch_control_tunnel_launched == False:
-                    self.launch_control_tunnel = roslaunch.scriptapi.ROSLaunch()
-                    self.launch_control_tunnel = roslaunch.parent.ROSLaunchParent(self.uuid, [self.ros_package_path + "turtlebot3_autorace_party_time_control/launch/turtlebot3_autorace_control_tunnel.launch"])     
+                    self.launch_control_tunnel = roslaunch.scriptapi.ROSLaunch(
+                    )
+                    self.launch_control_tunnel = roslaunch.parent.ROSLaunchParent(
+                        self.uuid, [
+                            self.ros_package_path +
+                            "turtlebot3_autorace_party_time_control/launch/turtlebot3_autorace_control_tunnel.launch"
+                        ])
                     self.launch_control_tunnel_launched = True
                     self.launch_control_tunnel.start()
                 else:
@@ -830,7 +861,6 @@ class CoreNodeController():
                     self.launch_control_tunnel.shutdown()
                 else:
                     pass
-
 
     def main(self):
         rospy.spin()
